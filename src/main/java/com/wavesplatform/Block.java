@@ -85,7 +85,8 @@ public class Block {
 
         final int C1 = 70000;
         final double C2 = 5e17;
-        this.delay = (long) (MinTime + C1 * Math.log(1.0 - C2 * Math.log(h) / prev.baseTarget / miner.balance));
+        this.delay = (long) (MinTime + C1 * Math.log(1 - C2 * Math.log(h) / prev.baseTarget / miner.balance));
+        // this.delay = (long) (MinTime + Math.log(1 - Math.log(h) / (miner.balance * prev.baseTarget) * 100000000L * 100000000L * 50L) * 70000L);
         this.time = prev.time + this.delay;
 
         double maxDelay = 90.;
