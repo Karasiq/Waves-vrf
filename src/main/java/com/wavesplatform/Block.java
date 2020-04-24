@@ -12,7 +12,7 @@ import java.math.BigInteger;
 import java.math.MathContext;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.concurrent.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class Block {
     public static final long MinTime = Integer.parseInt(System.getProperty("block-time", "5000"));
@@ -82,7 +82,9 @@ public class Block {
         BigDecimal maxHit = new BigDecimal(2).pow(64).subtract(new BigDecimal(1));
         double h = new BigDecimal(hit).divide(maxHit, MathContext.DECIMAL128).doubleValue();
 
-        this.delay = (long) (MinTime + Math.log(1 - Math.log(h) / (miner.balance * prev.baseTarget) * 100000000L * 100000000L * 50L) * 70000L);
+        final int C1 = 70000;
+        final double C2 = 5e17;
+        this.delay = (long) (MinTime + C1 * Math.log(1.0 - C2 * Math.log(h) / prev.baseTarget / miner.balance));
         this.time = prev.time + this.delay;
 
         double maxDelay = 90.;
