@@ -43,6 +43,7 @@ public class Block {
         this.miner = miners.get(ThreadLocalRandom.current().nextInt(0, miners.size()));
         this.prev = prev;
         this.baseTarget = 60;
+        this.delay = 60000;
         this.time = prev.time + this.delay;
         this.height = prev.height + 1;
         this.genSig = new byte[96];
