@@ -52,7 +52,7 @@ public class Block {
 
     private byte[] createGenSig(Block prev) {
         byte[] output = new byte[64];
-        System.arraycopy(prev.genSig, 0, output, 0, 32);
+        System.arraycopy(prev.vrf, 0, output, 0, 32);
         System.arraycopy(prev.miner.pk, 0, output, 32, 32);
         Blake2b.Blake2b256 blake2b256 = new Blake2b.Blake2b256();
         return blake2b256.digest(output);
@@ -69,7 +69,7 @@ public class Block {
         } catch (VrfSignatureVerificationFailedException e) {
             throw new RuntimeException(e);
         } */
-        this.genSig = createGenSig(prev);
+        this.vrf = createGenSig(prev);
         byte[] hitSource = Arrays.copyOfRange(this.vrf, 0, 8);
         ArrayUtils.reverse(hitSource);
         BigInteger hit = new BigInteger(1, hitSource);

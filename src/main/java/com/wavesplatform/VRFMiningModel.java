@@ -82,7 +82,7 @@ public class VRFMiningModel {
 
                 if (removeMiner) {
                     if (i == minerCameo) {
-                        System.out.printf("Average delay without miner = %.2f sec\n", (double)totalTime / minerCameo / 1000);
+                        System.out.printf("Adding miner, average delay without miner = %.2f sec\n", (double)totalTime / minerCameo / 1000);
                         totalTime = 0;
                         miners.add(0, removedMiner);
                     }
