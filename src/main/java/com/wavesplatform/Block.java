@@ -9,6 +9,7 @@ import org.whispersystems.curve25519.VrfSignatureVerificationFailedException;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.MathContext;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.*;
@@ -58,23 +59,28 @@ public class Block {
         return blake2b256.digest(output);
     }
 
-    public Block(Miner miner, Block prev, Block prev100) {
+    public Block(Miner miner, Block prev, Block prev100, boolean vrf) {
         this.miner = miner;
         this.prev = prev;
         this.height = prev.height + 1;
 
-        /* this.genSig = Crypto.provider.calculateVrfSignature(Crypto.provider.getRandom(32), miner.sk, prev100.vrf);
-        try {
-            this.vrf = Crypto.provider.verifyVrfSignature(miner.pk, prev100.vrf, this.genSig);
-        } catch (VrfSignatureVerificationFailedException e) {
-            throw new RuntimeException(e);
-        } */
-        this.vrf = createGenSig(prev);
+        if (vrf) {
+            this.genSig = Crypto.provider.calculateVrfSignature(Crypto.provider.getRandom(32), miner.sk, prev100.vrf);
+            try {
+                this.vrf = Crypto.provider.verifyVrfSignature(miner.pk, prev100.vrf, this.genSig);
+            } catch (VrfSignatureVerificationFailedException e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            this.vrf = createGenSig(prev);
+            this.genSig = this.vrf;
+        }
+
         byte[] hitSource = Arrays.copyOfRange(this.vrf, 0, 8);
         ArrayUtils.reverse(hitSource);
         BigInteger hit = new BigInteger(1, hitSource);
         BigDecimal maxHit = new BigDecimal(2).pow(64).subtract(new BigDecimal(1));
-        double h = (hit.doubleValue() / (maxHit).doubleValue());
+        double h = new BigDecimal(hit).divide(maxHit, MathContext.DECIMAL128).doubleValue();
 
         this.delay = (long) (MinTime + Math.log(1 - Math.log(h) / (miner.balance * prev.baseTarget) * 100000000L * 100000000L * 50L) * 70000L);
         this.time = prev.time + this.delay;

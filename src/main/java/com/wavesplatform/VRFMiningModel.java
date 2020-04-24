@@ -47,13 +47,14 @@ public class VRFMiningModel {
 
         Miner removedMiner = null;
         if (removeMiner) removedMiner = miners.remove(0);
-        int collisions = 0, blocksInLine = 0, maxBlocksInLine = 0, maxBlocksHeight = 0, firstLine = 0, totalTime = 0;
+        int collisions = 0, blocksInLine = 0, maxBlocksInLine = 0, maxBlocksHeight = 0, firstLine = 0;
+        long totalTime = 0;
         try (FileWriter writer = new FileWriter("blocks-" + Block.MinTime + ".json", false)) {
             writer.append("[").append('\n');
             for (int i = 0; i < blocksCount; i++) {
                 final Block prev = blocks.get(blocks.size() - 1);
                 List<Block> mined = miners.parallelStream()
-                        .map(m -> new Block(m, prev, blocks.get(blocks.size() - 101)))
+                        .map(m -> new Block(m, prev, blocks.get(blocks.size() - 101), false))
                         .collect(Collectors.toList());
 
                 Block block = mined.stream().min((b1, b2) -> (int) (b1.delay - b2.delay)).get();
@@ -80,12 +81,10 @@ public class VRFMiningModel {
 
                 final int minerCameo = blocksCount / 2;
 
-                if (removeMiner) {
-                    if (i == minerCameo) {
-                        System.out.printf("Adding miner, average delay without miner = %.2f sec\n", (double)totalTime / minerCameo / 1000);
-                        totalTime = 0;
-                        miners.add(0, removedMiner);
-                    }
+                if (removeMiner && i == minerCameo) {
+                    System.out.printf("Adding miner, average delay without miner = %.2f sec\n", (double)totalTime / minerCameo / 1000);
+                    totalTime = 0;
+                    miners.add(0, removedMiner);
                 }
 
                 if (!removeMiner || i > minerCameo) {
@@ -115,9 +114,9 @@ public class VRFMiningModel {
             System.out.println(ex.getMessage());
         }
 
-        System.out.printf("Max blocks in line = %d (at height %d), first = %d\n", maxBlocksInLine, maxBlocksHeight, firstLine);
+        // System.out.printf("Max blocks in line = %d (at height %d), first = %d\n", maxBlocksInLine, maxBlocksHeight, firstLine);
 
-        final long sumOfBalances = miners.stream().mapToLong(m -> m.balance).sum();
+        /* final long sumOfBalances = miners.stream().mapToLong(m -> m.balance).sum();
         final long sumOfBlocks = Arrays.stream(minersBlocks).sum();
         double[] minersRatio = new double[balances.length], minersPredicted = new double[balances.length];
         for (int i = 0; i < miners.size(); i++) {
@@ -128,7 +127,7 @@ public class VRFMiningModel {
             BigDecimal minerShare = new BigDecimal(minerBalance).setScale(6, RoundingMode.HALF_UP).divide(new BigDecimal(sumOfBalances).setScale(6, RoundingMode.HALF_UP), RoundingMode.HALF_UP);
             System.out.printf("Balance = %d, share = %.2f, blocks = %d, performance = %.2f\n", minerBalance, minerShare, minersBlocks[i], minersRatio[i]);
             // System.out.println(minerBalance + " " + minerShare + " " + miners_blocks[i] + " " + miners_ratio[i]);
-        }
+        } */
 
         System.out.printf("Finished in %.2f seconds", ((double) (System.nanoTime() - startTime)) / 1000000000L);
     }
