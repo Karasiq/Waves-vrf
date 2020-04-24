@@ -3,20 +3,16 @@ package com.wavesplatform;
 import com.google.gson.*;
 import com.wavesplatform.wavesj.Base58;
 import org.apache.commons.lang3.ArrayUtils;
-import org.bouncycastle.jcajce.provider.digest.Blake2b;
 import org.whispersystems.curve25519.VrfSignatureVerificationFailedException;
 
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.math.MathContext;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class Block {
-    public static final long MinTime = Integer.parseInt(System.getProperty("block-time", "5000"));
-
     public Miner miner;
     public Block prev;
     public long baseTarget;
@@ -43,7 +39,6 @@ public class Block {
         this.miner = miners.get(ThreadLocalRandom.current().nextInt(0, miners.size()));
         this.prev = prev;
         this.baseTarget = 60;
-        this.delay = 60000;
         this.time = prev.time + this.delay;
         this.height = prev.height + 1;
         this.genSig = new byte[96];
@@ -52,40 +47,23 @@ public class Block {
         ThreadLocalRandom.current().nextBytes(this.vrf);
     }
 
-    private byte[] createGenSig(Block prev) {
-        byte[] output = new byte[64];
-        System.arraycopy(prev.vrf, 0, output, 0, 32);
-        System.arraycopy(prev.miner.pk, 0, output, 32, 32);
-        Blake2b.Blake2b256 blake2b256 = new Blake2b.Blake2b256();
-        return blake2b256.digest(output);
-    }
-
-    public Block(Miner miner, Block prev, Block prev100, boolean vrf) {
+    public Block(Miner miner, Block prev, Block prev100) {
         this.miner = miner;
         this.prev = prev;
         this.height = prev.height + 1;
-
-        if (vrf) {
-            this.genSig = Crypto.provider.calculateVrfSignature(Crypto.provider.getRandom(32), miner.sk, prev100.vrf);
-            try {
-                this.vrf = Crypto.provider.verifyVrfSignature(miner.pk, prev100.vrf, this.genSig);
-            } catch (VrfSignatureVerificationFailedException e) {
-                throw new RuntimeException(e);
-            }
-        } else {
-            this.vrf = createGenSig(prev);
-            this.genSig = this.vrf;
+        this.genSig = Crypto.provider.calculateVrfSignature(Crypto.provider.getRandom(32), miner.sk, prev100.vrf);
+        try {
+            this.vrf = Crypto.provider.verifyVrfSignature(miner.pk, prev100.vrf, this.genSig);
+        } catch (VrfSignatureVerificationFailedException e) {
+            throw new RuntimeException(e);
         }
-
         byte[] hitSource = Arrays.copyOfRange(this.vrf, 0, 8);
         ArrayUtils.reverse(hitSource);
         BigInteger hit = new BigInteger(1, hitSource);
         BigDecimal maxHit = new BigDecimal(2).pow(64).subtract(new BigDecimal(1));
-        double h = new BigDecimal(hit).divide(maxHit, MathContext.DECIMAL128).doubleValue();
+        double h = (hit.doubleValue() / (maxHit).doubleValue());
 
-        final int C1 = 70000;
-        final double C2 = 5e17;
-        this.delay = (long) (MinTime + C1 * Math.log(1.0 - C2 * Math.log(h) / prev.baseTarget / miner.balance));
+        this.delay = (long) (5000 + Math.log(1 - Math.log(h) / (miner.balance * prev.baseTarget) * 100000000 * 100000000 * 50) * 70000);
         this.time = prev.time + this.delay;
 
         double maxDelay = 90.;
