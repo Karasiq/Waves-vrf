@@ -92,7 +92,7 @@ public class Block {
         double maxDelay = 90.;
         double minDelay = 30.;
 
-        long avg = (this.time - prev.prev.time) / 3 / 1000;
+        long avg = (this.time - prev.prev.prev.time) / 3 / 1000;
         if (avg > maxDelay) this.baseTarget = prev.baseTarget + Math.max(1, prev.baseTarget / 100);
         else if (avg < minDelay) this.baseTarget = prev.baseTarget - Math.max(1, prev.baseTarget / 100);
         else this.baseTarget = prev.baseTarget;
