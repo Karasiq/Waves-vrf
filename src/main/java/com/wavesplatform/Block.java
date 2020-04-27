@@ -16,6 +16,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class Block {
     public static final long MinTime = Integer.parseInt(System.getProperty("block-time", "5000"));
+    private static final BigDecimal MaxHit = new BigDecimal(2).pow(64).subtract(new BigDecimal(1));
 
     public Miner miner;
     public Block prev;
@@ -80,8 +81,7 @@ public class Block {
         byte[] hitSource = Arrays.copyOfRange(this.vrf, 0, 8);
         ArrayUtils.reverse(hitSource);
         BigInteger hit = new BigInteger(1, hitSource);
-        BigDecimal maxHit = new BigDecimal(2).pow(64).subtract(new BigDecimal(1));
-        double h = new BigDecimal(hit).divide(maxHit, MathContext.DECIMAL128).doubleValue();
+        double h = new BigDecimal(hit).divide(MaxHit, MathContext.DECIMAL128).doubleValue();
 
         final int C1 = 70000;
         final double C2 = 5e17;
