@@ -17,6 +17,7 @@ import java.util.concurrent.ThreadLocalRandom;
 public class Block {
     public static final long MinTime = Integer.parseInt(System.getProperty("block-time", "5000"));
     private static final BigDecimal MaxHit = new BigDecimal(2).pow(64).subtract(new BigDecimal(1));
+    private static final int DefaultBaseTarget = 85;
 
     public Miner miner;
     public Block prev;
@@ -30,7 +31,7 @@ public class Block {
     public Block(ArrayList<Miner> miners) {
         this.miner = miners.get(ThreadLocalRandom.current().nextInt(0, miners.size()));
         this.prev = null;
-        this.baseTarget = 60;
+        this.baseTarget = DefaultBaseTarget;
         this.delay = 60000;
         this.time = 0;
         this.height = 0;
@@ -43,7 +44,7 @@ public class Block {
     public Block(ArrayList<Miner> miners, Block prev) {
         this.miner = miners.get(ThreadLocalRandom.current().nextInt(0, miners.size()));
         this.prev = prev;
-        this.baseTarget = 60;
+        this.baseTarget = DefaultBaseTarget;
         this.delay = 60000;
         this.time = prev.time + this.delay;
         this.height = prev.height + 1;
@@ -89,8 +90,7 @@ public class Block {
         // this.delay = (long) (MinTime + Math.log(1 - Math.log(h) / (miner.balance * prev.baseTarget) * 100000000L * 100000000L * 50L) * 70000L);
         this.time = prev.time + this.delay;
 
-        double maxDelay = 90.;
-        double minDelay = 30.;
+        final double maxDelay = 82, minDelay = 38;
 
         long avg = (this.time - prev.prev.prev.time) / 3 / 1000;
         if (avg > maxDelay) this.baseTarget = prev.baseTarget + Math.max(1, prev.baseTarget / 100);
