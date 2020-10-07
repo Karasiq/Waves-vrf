@@ -54,10 +54,10 @@ public class Block {
         ThreadLocalRandom.current().nextBytes(this.vrf);
     }
 
-    private byte[] createGenSig(Block prev) {
+    private byte[] createGenSig(Miner miner, Block prev100) {
         byte[] output = new byte[64];
-        System.arraycopy(prev.vrf, 0, output, 0, 32);
-        System.arraycopy(prev.miner.pk, 0, output, 32, 32);
+        System.arraycopy(prev100.vrf, 0, output, 0, 32);
+        System.arraycopy(miner.publicKey, 0, output, 32, 32);
         Blake2b.Blake2b256 blake2b256 = new Blake2b.Blake2b256();
         return blake2b256.digest(output);
     }
@@ -68,14 +68,14 @@ public class Block {
         this.height = prev.height + 1;
 
         if (vrf) {
-            this.genSig = Crypto.provider.calculateVrfSignature(Crypto.provider.getRandom(32), miner.sk, prev100.vrf);
+            this.genSig = Crypto.provider.calculateVrfSignature(Crypto.provider.getRandom(32), miner.privateKey, prev100.vrf);
             try {
-                this.vrf = Crypto.provider.verifyVrfSignature(miner.pk, prev100.vrf, this.genSig);
+                this.vrf = Crypto.provider.verifyVrfSignature(miner.publicKey, prev100.vrf, this.genSig);
             } catch (VrfSignatureVerificationFailedException e) {
                 throw new RuntimeException(e);
             }
         } else {
-            this.vrf = createGenSig(prev);
+            this.vrf = createGenSig(miner, prev100);
             this.genSig = this.vrf;
         }
 
@@ -102,8 +102,8 @@ public class Block {
         @Override
         public JsonElement serialize(Block src, Type typeOfSrc, JsonSerializationContext context) {
             JsonObject json = new JsonObject();
-            json.add("privateKey", new JsonPrimitive(Base58.encode(src.miner.sk)));
-            json.add("publicKey", new JsonPrimitive(Base58.encode(src.miner.pk)));
+            json.add("privateKey", new JsonPrimitive(Base58.encode(src.miner.privateKey)));
+            json.add("publicKey", new JsonPrimitive(Base58.encode(src.miner.publicKey)));
             json.add("balance", new JsonPrimitive(src.miner.balance));
             json.add("baseTarget", new JsonPrimitive(src.baseTarget));
             json.add("delay", new JsonPrimitive(src.delay));

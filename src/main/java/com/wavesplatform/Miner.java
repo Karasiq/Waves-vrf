@@ -1,13 +1,13 @@
 package com.wavesplatform;
 
 public class Miner {
-    public byte[] pk;
-    public byte[] sk;
+    public final byte[] publicKey;
+    public final byte[] privateKey;
     public long balance;
 
-    public Miner(byte[] pk, byte[] sk, long balance) {
-        this.pk = pk;
-        this.sk = sk;
+    public Miner(byte[] publicKey, byte[] privateKey, long balance) {
+        this.publicKey = publicKey;
+        this.privateKey = privateKey;
         this.balance = balance;
     }
 }

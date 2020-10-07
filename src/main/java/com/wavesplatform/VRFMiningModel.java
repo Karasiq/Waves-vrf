@@ -55,16 +55,16 @@ public class VRFMiningModel {
             }
         } */
 
-        ArrayList<Miner> miners = new ArrayList<>();
+        final ArrayList<Miner> miners = new ArrayList<>();
         int[] minersBlocks = new int[balances.length];
-        for (long balance : balances) {
-            byte[] sk = Crypto.provider.generatePrivateKey();
-            byte[] pk = Crypto.provider.generatePublicKey(sk);
-            miners.add(new Miner(pk, sk, balance));
+        for (final long balance : balances) {
+            byte[] privateKey = Crypto.provider.generatePrivateKey();
+            byte[] publicKey = Crypto.provider.generatePublicKey(privateKey);
+            miners.add(new Miner(publicKey, privateKey, balance));
         }
 
 
-        ArrayList<Block> blocks = new ArrayList<>();
+        final ArrayList<Block> blocks = new ArrayList<>();
         blocks.add(new Block(miners));
         for (int i = 0; i < 100; i++) {
             blocks.add(new Block(miners, blocks.get(blocks.size() - 1)));
@@ -79,7 +79,7 @@ public class VRFMiningModel {
             writer.append("[").append('\n');
             for (int i = 0; i < blocksCount; i++) {
                 final Block prev = blocks.get(blocks.size() - 1);
-                List<Block> mined = miners.parallelStream()
+                List<Block> mined = miners.stream()
                         .map(m -> new Block(m, prev, blocks.get(blocks.size() - 101), vrf))
                         .collect(Collectors.toList());
 
